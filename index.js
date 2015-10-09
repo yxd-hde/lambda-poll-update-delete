@@ -8,18 +8,38 @@ var queueUrl = 'https://sqs.ap-northeast-1.amazonaws.com/164201395711/xudong-nob
 
 var poll = require('./lib/poll.js');
 
+var stats = {};
+
 exports.handler = function(event, context) {
   var source = poll.messages(sqs, queueUrl);
   var count = 0;
 
-  var observer = Rx.Observer.create(function(x) {
+  var observer = Rx.Observer.create(function(msg) {
     count++;
+    add(msg, stats);
   }, function(e) {
     console.log(e);
+    context.done(e);
   }, function() {
     console.log('Fetched messages: ' + count);
+    console.log('Statistics: ');
+    console.log(stats);
     context.done();
   });
 
   var subscription = source.take(1000).subscribe(observer);
+};
+
+var add = function(msg, stats) {
+  var body = JSON.parse(msg.Body);
+  var domain = body.domain;
+  if (!(domain in stats)) {
+    stats[domain] = {
+      count: 0,
+      size: 0
+    };
+  }
+
+  stats[domain].count += body.count;
+  stats[domain].size += body.size;
 };
