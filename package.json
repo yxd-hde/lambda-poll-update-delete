@@ -1,0 +1,34 @@
+{
+  "name": "lambda-poll-update-delete",
+  "version": "1.0.0",
+  "description": "test project for lambda",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yxd-hde/lambda-poll-update-delete.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yxd-hde/lambda-poll-update-delete/issues"
+  },
+  "homepage": "https://github.com/yxd-hde/lambda-poll-update-delete#readme",
+  "dependencies": {
+    "rx": "^4.0.0",
+    "aws-sdk": "^2.2.8"
+  },
+  "devDependencies": {
+    "del": "^2.0.2",
+    "gulp": "^3.9.0",
+    "gulp-install": "^0.6.0",
+    "gulp-param": "^0.6.4",
+    "gulp-run": "^1.6.11",
+    "gulp-zip": "^3.0.2",
+    "lambda-local": "0.0.5",
+    "node-aws-lambda": "^0.1.6",
+    "run-sequence": "^1.1.4"
+  }
+}
