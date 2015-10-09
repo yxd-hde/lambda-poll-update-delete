@@ -1,3 +1,4 @@
+var Promise = require('promise');
 var Rx = require('rx');
 var aws = require('aws-sdk');
 aws.config.update({

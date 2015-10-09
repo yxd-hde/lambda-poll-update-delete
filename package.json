@@ -17,8 +17,9 @@
   },
   "homepage": "https://github.com/yxd-hde/lambda-poll-update-delete#readme",
   "dependencies": {
-    "rx": "^4.0.0",
-    "aws-sdk": "^2.2.8"
+    "aws-sdk": "^2.2.8",
+    "promise": "^7.0.4",
+    "rx": "^4.0.0"
   },
   "devDependencies": {
     "del": "^2.0.2",
