@@ -15,6 +15,7 @@ var update = require('./lib/update.js');
 var del = require('./lib/delete.js');
 
 exports.handler = function(event, context) {
+  console.log('Start!');
   startPoll(event, context);
 };
 
