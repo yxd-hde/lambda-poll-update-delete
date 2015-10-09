@@ -19,19 +19,25 @@ exports.handler = function(event, context) {
 
 function startPoll(event, context) {
   var messages = poll.messages(sqs, queueUrl);
-  var count = 0;
 
   var msgObserver = Rx.Observer.create(function(msg) {
-    count++;
     sum.add(msg);
   }, function(e) {
     console.log(e);
     context.done(e);
   }, function() {
     console.log('Receive API count: ' + poll.fetchCount);
-    console.log('Fetched messages: ' + count);
+    console.log('Fetched messages: ' + poll.messageCount);
 
-    updateAndDelete(context);
+    var p = updateAndDelete(context);
+    p.then(function() {
+      console.log("Update API count: " + update.updateCount);
+      console.log("Delete API count: " + del.deleteCount);
+      console.log("Delete Message count: " + del.messageCount);
+      context.done();
+    }, function(e) {
+      context.done(e);
+    });
   });
 
   var subscription = messages.take(1000).subscribe(msgObserver);
@@ -42,17 +48,13 @@ function updateAndDelete(context) {
   for (var domain in sum.stats) {
     var stats = sum.stats[domain];
     var updateResult = update.exec(db, table, stats);
-    var delResult = updateResult.then(function() {
-      return del.exec(sqs, queueUrl, stats.ids);
+    var delResult = updateResult.then(function(ids) {
+      return del.exec(sqs, queueUrl, ids);
     }, function(e) {
       console.log(e);
+      return Promise.resolve('dynamodb update error');
     });
-    results.push(delResult);
+    results.push(delResult.then());
   }
-  Promise.all(results).then(function() {
-    console.log("Update API count: " + update.updateCount);
-    console.log("Delete API count: " + del.deleteCount);
-    console.log("Delete Message count: " + del.messageCount);
-    context.done();
-  });
+  return Promise.all(results);
 }
