@@ -51,7 +51,15 @@ function updateAndDelete() {
     var stats = sum.stats[domain];
     var updateResult = update.exec(db, table, stats);
     var delResult = updateResult.then(function(ids) {
-      return del.exec(sqs, queueUrl, ids);
+      return new Promise(function(resolve, reject) {
+        var results = Rx.Observable.forkJoin(del.exec(sqs, queueUrl, ids));
+        results.subscribe(function() {}, function(e) {
+          console.log(e);
+          reject(e);
+        }, function() {
+          resolve();
+        });
+      });
     }, function(e) {
       console.log(e);
       return Promise.resolve('dynamodb update error');
