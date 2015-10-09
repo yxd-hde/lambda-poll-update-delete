@@ -16,6 +16,7 @@ var del = require('./lib/delete.js');
 
 exports.handler = function(event, context) {
   console.log('Start!');
+  console.time('job');
   startPoll(event, context);
 };
 
@@ -33,11 +34,14 @@ function startPoll(event, context) {
 
     var results = Rx.Observable.forkJoin(updateAndDelete());
     results.subscribe(function() {}, function(e) {
+      console.timeEnd('job');
       context.done(e);
     }, function() {
       console.log("Update API count: " + update.updateCount);
       console.log("Delete API count: " + del.deleteCount);
       console.log("Delete Message count: " + del.messageCount);
+
+      console.timeEnd('job');
       context.done();
     });
   });
