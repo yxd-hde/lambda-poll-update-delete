@@ -31,21 +31,21 @@ function startPoll(event, context) {
     console.log('Receive API count: ' + poll.fetchCount);
     console.log('Fetched messages: ' + poll.messageCount);
 
-    var p = updateAndDelete(context);
-    p.then(function() {
+    var results = Rx.Observable.forkJoin(updateAndDelete());
+    results.subscribe(function() {}, function(e) {
+      context.done(e);
+    }, function() {
       console.log("Update API count: " + update.updateCount);
       console.log("Delete API count: " + del.deleteCount);
       console.log("Delete Message count: " + del.messageCount);
       context.done();
-    }, function(e) {
-      context.done(e);
     });
   });
 
   var subscription = messages.take(1000).subscribe(msgObserver);
 }
 
-function updateAndDelete(context) {
+function updateAndDelete() {
   var results = [];
   for (var domain in sum.stats) {
     var stats = sum.stats[domain];
@@ -56,7 +56,7 @@ function updateAndDelete(context) {
       console.log(e);
       return Promise.resolve('dynamodb update error');
     });
-    results.push(delResult.then());
+    results.push(delResult);
   }
-  return Promise.all(results);
+  return results;
 }
