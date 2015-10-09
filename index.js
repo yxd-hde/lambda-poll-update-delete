@@ -4,22 +4,26 @@ aws.config.update({
   region: 'ap-northeast-1'
 });
 var sqs = new aws.SQS();
-var queueUrl = 'https://sqs.ap-northeast-1.amazonaws.com/164201395711/xudong-nobita-mailstat-test';
+var db = new aws.DynamoDB();
+const queueUrl = 'https://sqs.ap-northeast-1.amazonaws.com/164201395711/xudong-nobita-mailstat-test';
+const table = 'xudong-nobita-mailstat-sample';
 
 var poll = require('./lib/poll.js');
 var sum = require('./lib/sum.js');
+var update = require('./lib/update.js');
 var del = require('./lib/delete.js');
 
 exports.handler = function(event, context) {
-  var source = poll.messages(sqs, queueUrl);
+  startPoll(event, context);
+};
+
+function startPoll(event, context) {
+  var messages = poll.messages(sqs, queueUrl);
   var count = 0;
 
-  var observer = Rx.Observer.create(function(msg) {
+  var msgObserver = Rx.Observer.create(function(msg) {
     count++;
-
-    var body = JSON.parse(msg.Body);
-    sum.add(body);
-    del.append(body.domain, msg.MessageId);
+    sum.add(msg);
   }, function(e) {
     console.log(e);
     context.done(e);
@@ -27,13 +31,28 @@ exports.handler = function(event, context) {
     console.log('Receive API count: ' + poll.fetchCount);
     console.log('Fetched messages: ' + count);
 
-    console.log('Statistics: ');
-    console.log(sum.stats);
-
-    console.log('Message IDs: ');
-    console.log(del.ids);
-    context.done();
+    updateAndDelete(context);
   });
 
-  var subscription = source.take(1000).subscribe(observer);
-};
+  var subscription = messages.take(1000).subscribe(msgObserver);
+}
+
+function updateAndDelete(context) {
+  var results = [];
+  for (var domain in sum.stats) {
+    var stats = sum.stats[domain];
+    var updateResult = update.exec(db, table, stats);
+    var delResult = updateResult.then(function() {
+      return del.exec(sqs, queueUrl, stats.ids);
+    }, function(e) {
+      console.log(e);
+    });
+    results.push(delResult);
+  }
+  Promise.all(results).then(function() {
+    console.log("Update API count: " + update.updateCount);
+    console.log("Delete API count: " + del.deleteCount);
+    console.log("Delete Message count: " + del.messageCount);
+    context.done();
+  });
+}
