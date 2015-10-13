@@ -6,22 +6,29 @@ aws.config.update({
 });
 var sqs = new aws.SQS();
 var db = new aws.DynamoDB();
-const queueUrl = 'https://sqs.ap-northeast-1.amazonaws.com/164201395711/xudong-nobita-mailstat-test';
-const table = 'xudong-nobita-mailstat-sample';
 
 var poll = require('./lib/poll.js');
 var sum = require('./lib/sum.js');
 var update = require('./lib/update.js');
 var del = require('./lib/delete.js');
 
+var queueUrl = 'https://sqs.ap-northeast-1.amazonaws.com/164201395711/xudong-nobita-mailstat-test';
+var table = 'xudong-nobita-mailstat-sample';
+var messageCount = 1000;
+
 exports.handler = function(event, context) {
   console.log('Start!');
   console.time('job');
-  startPoll(event, context);
+
+  messageCount = event.messageCount || messageCount;
+  queueUrl = event.queueUrl || queueUrl;
+  table = event.table || table;
+
+  startPoll(context);
 };
 
-function startPoll(event, context) {
-  var messages = poll.messages(sqs, queueUrl);
+function startPoll(context) {
+  var messages = poll.messages(sqs, queueUrl, messageCount);
 
   var msgObserver = Rx.Observer.create(function(msg) {
     sum.add(msg);
@@ -46,7 +53,7 @@ function startPoll(event, context) {
     });
   });
 
-  var subscription = messages.take(1000).subscribe(msgObserver);
+  var subscription = messages.subscribe(msgObserver);
 }
 
 function updateAndDelete() {
