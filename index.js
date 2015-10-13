@@ -42,7 +42,7 @@ function startPoll(event, context) {
       console.log("Delete Message count: " + del.messageCount);
 
       console.timeEnd('job');
-      context.done();
+      context.done(null, 'Lambda function finished successfully.');
     });
   });
 
