@@ -17,7 +17,7 @@ const job = 'Lambda Job';
 
 exports.handler = function(event, context) {
   var poll = new Poll();
-  var sum = new sum();
+  var sum = new Sum();
   var update = new Update();
   var del = new Del();
 
