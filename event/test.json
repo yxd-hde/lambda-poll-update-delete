@@ -1,5 +1,5 @@
 {
-  "messageCount": 1000,
-  "queueUrl": "https://sqs.ap-northeast-1.amazonaws.com/164201395711/xudong-nobita-mailstat-test",
-  "table": "xudong-nobita-mailstat-sample"
+  "messageCount": 100,
+  "queueUrl": "https://sqs.ap-northeast-1.amazonaws.com/164201395711/nobita-mailstat-test",
+  "table": "nobita-mailstat-daily-test"
 }
