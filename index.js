@@ -25,14 +25,17 @@ exports.handler = function(event, context) {
   var queueUrl;
   var table;
 
-  var done;
+  var done = function(error, result) {
+    if (error) {
+      console.error(error, error.stack);
+    }
+    console.timeEnd(job);
+    context.done(error, result);
+  };
 
   function before(event, context) {
     console.time(job);
     console.info('Job start!');
-
-    prepareSingletons();
-    prepareDone(context);
 
     if (!event.messageCount || !event.table || !event.queueUrl) {
       done(new Error('Event is malformed.'));
@@ -42,23 +45,6 @@ exports.handler = function(event, context) {
     messageCount = event.messageCount;
     queueUrl = event.queueUrl;
     table = event.table;
-  }
-
-  function prepareDone(context) {
-    done = function(error, result) {
-      if (error) {
-        console.error(error, error.stack);
-      }
-      console.timeEnd(job);
-      context.done(error, result);
-    };
-  }
-
-  function prepareSingletons() {
-    poll = Poll();
-    sum = Sum();
-    update = Update();
-    del = new Del();
   }
 
   function start(context) {
