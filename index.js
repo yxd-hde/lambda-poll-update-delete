@@ -35,6 +35,8 @@ function before(event, context) {
   if (!event.messageCount || !event.table || !event.queueUrl) {
     done(new Error('Event is malformed.'));
   }
+  console.log(event);
+
   messageCount = event.messageCount;
   queueUrl = event.queueUrl;
   table = event.table;
