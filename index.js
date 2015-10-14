@@ -4,52 +4,72 @@ var aws = require('aws-sdk');
 aws.config.update({
   region: 'ap-northeast-1'
 });
-var sqs = new aws.SQS();
-var db = new aws.DynamoDB();
 
 var poll = require('./lib/poll.js');
 var sum = require('./lib/sum.js');
 var update = require('./lib/update.js');
 var del = require('./lib/delete.js');
 
-var queueUrl = 'https://sqs.ap-northeast-1.amazonaws.com/164201395711/xudong-nobita-mailstat-test';
-var table = 'xudong-nobita-mailstat-sample';
-var messageCount = 1000;
+var sqs = new aws.SQS();
+var db = new aws.DynamoDB();
+
+var messageCount;
+var queueUrl;
+var table;
+
+var done;
+
+const job = 'Lambda Job';
 
 exports.handler = function(event, context) {
-  console.log('Start!');
-  console.time('job');
-
-  messageCount = event.messageCount || messageCount;
-  queueUrl = event.queueUrl || queueUrl;
-  table = event.table || table;
-
-  startPoll(context);
+  before(event, context);
+  start(context);
 };
 
-function startPoll(context) {
+function before(event, context) {
+  console.time(job);
+  console.log('Job start!');
+
+  done = prepareDone(context);
+
+  if (!event.messageCount || !event.table || !event.queueUrl) {
+    done(new Error('Event is malformed.'));
+  }
+  messageCount = event.messageCount;
+  queueUrl = event.queueUrl;
+  table = event.table;
+}
+
+function prepareDone(context) {
+  return function(error, result) {
+    if (error) {
+      console.log(error, error.stack);
+    }
+    console.timeEnd(job);
+    context.done(error, result);
+  };
+}
+
+function start(context) {
   var messages = poll.messages(sqs, queueUrl, messageCount);
 
   var msgObserver = Rx.Observer.create(function(msg) {
     sum.add(msg);
   }, function(e) {
-    console.log(e);
-    context.done(e);
+    done(e);
   }, function() {
     console.log('Receive API count: ' + poll.fetchCount);
     console.log('Fetched messages: ' + poll.messageCount);
 
     var results = Rx.Observable.forkJoin(updateAndDelete());
     results.subscribe(function() {}, function(e) {
-      console.timeEnd('job');
-      context.done(e);
+      done(e);
     }, function() {
       console.log("Update API count: " + update.updateCount);
       console.log("Delete API count: " + del.deleteCount);
       console.log("Delete Message count: " + del.messageCount);
 
-      console.timeEnd('job');
-      context.done(null, 'Lambda function finished successfully.');
+      done(null, 'Lambda job finished successfully.');
     });
   });
 
