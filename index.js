@@ -85,14 +85,14 @@ function updateAndDelete() {
       return new Promise(function(resolve, reject) {
         var results = Rx.Observable.forkJoin(del.exec(sqs, queueUrl, ids));
         results.subscribe(function() {}, function(e) {
-          console.log(e);
+          console.log(e, e.stack);
           reject(e);
         }, function() {
           resolve();
         });
       });
     }, function(e) {
-      console.log(e);
+      console.log(e, e.stack);
       return Promise.resolve('dynamodb update error');
     });
     results.push(delResult);
