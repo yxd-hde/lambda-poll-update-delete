@@ -28,14 +28,14 @@ exports.handler = function(event, context) {
 
 function before(event, context) {
   console.time(job);
-  console.log('Job start!');
+  console.info('Job start!');
 
   done = prepareDone(context);
 
   if (!event.messageCount || !event.table || !event.queueUrl) {
     done(new Error('Event is malformed.'));
   }
-  console.log(event);
+  console.info(event);
 
   messageCount = event.messageCount;
   queueUrl = event.queueUrl;
@@ -45,7 +45,7 @@ function before(event, context) {
 function prepareDone(context) {
   return function(error, result) {
     if (error) {
-      console.log(error, error.stack);
+      console.error(error, error.stack);
     }
     console.timeEnd(job);
     context.done(error, result);
@@ -60,16 +60,16 @@ function start(context) {
   }, function(e) {
     done(e);
   }, function() {
-    console.log('Receive API count: ' + poll.fetchCount);
-    console.log('Fetched messages: ' + poll.messageCount);
+    console.info('Receive API count: ' + poll.fetchCount);
+    console.info('Fetched messages: ' + poll.messageCount);
 
     var results = Rx.Observable.forkJoin(updateAndDelete());
     results.subscribe(function() {}, function(e) {
       done(e);
     }, function() {
-      console.log("Update API count: " + update.updateCount);
-      console.log("Delete API count: " + del.deleteCount);
-      console.log("Delete Message count: " + del.messageCount);
+      console.info("Update API count: " + update.updateCount);
+      console.info("Delete API count: " + del.deleteCount);
+      console.info("Delete Message count: " + del.messageCount);
 
       done(null, 'Lambda job finished successfully.');
     });
@@ -87,14 +87,14 @@ function updateAndDelete() {
       return new Promise(function(resolve, reject) {
         var results = Rx.Observable.forkJoin(del.exec(sqs, queueUrl, ids));
         results.subscribe(function() {}, function(e) {
-          console.log(e, e.stack);
+          console.warn(e, e.stack);
           reject(e);
         }, function() {
           resolve();
         });
       });
     }, function(e) {
-      console.log(e, e.stack);
+      console.warn(e, e.stack);
       return Promise.resolve('dynamodb update error');
     });
     results.push(delResult);
