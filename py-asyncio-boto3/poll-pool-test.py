@@ -1,5 +1,5 @@
 import boto3
-from concurrent.futures import ThreadPoolExecutor
+from multiprocessing.pool import ThreadPool as Pool
 
 from calculate import Sum
 
@@ -23,7 +23,7 @@ wait_time = 1
 def handler(event, contest):
     logger.info("Start!")
 
-    executor = ThreadPoolExecutor(max_workers=1000)
+    executor = Pool(1000)
 
     cal = Sum()
 
@@ -48,7 +48,7 @@ def handler(event, contest):
     logger.info("Receive API count: {}".format(num_of_calls))
     logger.info("Fetched messages: {}".format(message_count))
 
-    executor.shutdown()
+    executor.close()
 
 
 def one_request(queue):
