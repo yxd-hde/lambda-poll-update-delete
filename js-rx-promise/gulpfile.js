@@ -7,7 +7,12 @@ var runSequence = require('run-sequence');
 var awsLambda = require("node-aws-lambda");
 
 gulp.task('default', function() {
-  console.log('test');
+  return runSequence(
+    ['clean'],
+    ['js'],
+    ['node-mods'],
+    ['zip']
+  );
 });
 
 gulp.task('install', function() {
@@ -42,13 +47,4 @@ gulp.task('zip', function() {
   return gulp.src(['dist/**/*', '!dist/package.json'])
     .pipe(zip('dist.zip'))
     .pipe(gulp.dest('./'));
-});
-
-gulp.task('package', function() {
-  return runSequence(
-    ['clean'],
-    ['js'],
-    ['node-mods'],
-    ['zip']
-  );
 });
