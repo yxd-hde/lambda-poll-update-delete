@@ -17,4 +17,4 @@ clean:
 	rm -rf dist.zip dist/*
 
 local:
-	python-lambda-local -l lib/ -t 60 main.py event/test.json
+	python-lambda-local -l lib/ -t 60 main.py ../event/test.json
