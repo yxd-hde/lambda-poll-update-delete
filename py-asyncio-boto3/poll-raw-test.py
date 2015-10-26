@@ -23,7 +23,7 @@ wait_time = 1
 def handler(event, contest):
     logger.info("Start!")
 
-    executor = ThreadPoolExecutor(max_workers=1000)
+    executor = ThreadPoolExecutor(max_workers=100)
 
     cal = Sum()
 
